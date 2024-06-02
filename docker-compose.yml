@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  rabbitmq:
+    image: "rabbitmq:3-management"
+    ports:
+      - "5673:5672"
+      - "15673:15672"  # Changed external port to 15673
+    networks:
+      - my_network
+    healthcheck:
+      test: ["CMD-SHELL", "rabbitmq-diagnostics -q ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  payments:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - .:/app
+    networks:
+      - my_network
+    ports:
+      - "8002:8001"
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+
+networks:
+  my_network:
+    external: true
